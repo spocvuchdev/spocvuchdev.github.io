@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev & PvP Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: every section gets its own composition. Hero = giant headline over a media stage. Marquee strip. Work = two halves that slide open. Bots = code-editor window with tabs. PvP = inventory panels and a hotbar. Then a step track and a contact card. White and grey only. */
+:root {
+  --bg: #ECECED;
+  --surface: #FFFFFF;
+  --ink: #121213;
+  --muted: #606064;
+  --line: #D6D6D9;
+  --soft: #F5F5F6;
+  --stage: #DCDCDF;
+  --stripe: #D2D2D5;
+  --accent: #121213;
+  --accent-ink: #FFFFFF;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 0;
+  padding-block: 20px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  transition: background-color .6s ease;
+}
+body[data-mode="bots"] { --bg: #121212; }
+body[data-mode="pvp"] { --bg: #D2D2D5; }
+.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 96px; }
+a { color: inherit; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.5rem, 8.2vw, 6.2rem); line-height: 0.98; font-weight: 700; letter-spacing: -0.035em; }
+h2 { font-size: clamp(1.6rem, 3.6vw, 2.25rem); line-height: 1.12; font-weight: 600; }
+h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 600; }
+p { margin: 0; max-width: 62ch; }
+.label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+
+/* hover grow: the transform is set from JavaScript */
+[data-grow] { position: relative; transition: transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s ease; will-change: transform; }
+[data-grow].grown { z-index: 5; box-shadow: 0 22px 44px -22px rgba(18,18,19,.45); }
+a[data-grow], button[data-grow] { display: inline-block; }
+.hslot[data-grow] { display: flex; }
+
+/* top bar */
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; text-decoration: none; letter-spacing: -0.01em; }
+.bar nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.bar nav a { text-decoration: none; padding: 6px 14px; border-radius: 999px; color: var(--muted); font-size: 0.9375rem; }
+.bar nav a:hover { color: var(--ink); background: var(--surface); }
+
+.btn { padding: 13px 22px; border-radius: 10px; font-weight: 500; text-decoration: none; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); font-family: var(--font-body); font-size: 1rem; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* media boxes: striped placeholder until the real file loads */
+.media { position: relative; overflow: hidden; background: var(--stage); border-radius: 14px; aspect-ratio: 16 / 10; max-width: 100%; }
+.media .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: 16px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); background: repeating-linear-gradient(135deg, var(--stage) 0 14px, var(--stripe) 14px 15px); }
+.media .ph b { font-weight: 500; color: var(--ink); }
+.media img, .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.media.ready .ph { display: none; }
+
+/* 1. hero */
+.hero { display: flex; flex-direction: column; gap: 40px; margin-top: -40px; }
+.hero-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 36px; align-items: end; }
+.hero-copy { display: flex; flex-direction: column; gap: 20px; }
+.lede { font-size: 1.125rem; color: var(--muted); }
+.stage { border-radius: 18px; background: var(--surface); padding: 10px; border: 1px solid var(--line); }
+.stage .slides { position: relative; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; }
+.stage .slide { position: absolute; inset: 0; border-radius: 0; aspect-ratio: auto; opacity: 0; transition: opacity .6s ease; }
+.stage .slide.active { opacity: 1; }
+.stage .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 6px 4px; flex-wrap: wrap; }
+.stage .cap { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+.stage .cap strong { font-family: var(--font-display); font-weight: 600; }
+.slots { display: flex; gap: 6px; }
+.slot { width: 32px; height: 32px; border: 2px solid var(--line); background: var(--soft); border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); cursor: pointer; padding: 0; }
+.slot[aria-current="true"] { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+
+/* 2. marquee */
+.marquee { overflow: hidden; border-block: 1px solid var(--ink); padding-block: 14px; margin-block: -24px; }
+.marquee .run { display: flex; width: max-content; animation: run 30s linear infinite; }
+.marquee:hover .run { animation-play-state: paused; }
+.marquee .grp { display: flex; gap: 36px; padding-right: 36px; font-family: var(--font-display); font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; white-space: nowrap; }
+.marquee .grp span:nth-child(even) { color: var(--muted); }
+@keyframes run { to { transform: translateX(-50%); } }
+
+/* 3. work: two halves, hovered half slides open */
+.head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.back { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); text-decoration: none; align-self: flex-start; }
+.back:hover { color: var(--ink); }
+.split { display: flex; gap: 16px; height: 380px; }
+.half { position: relative; flex: 1 1 0; min-width: 0; border-radius: 20px; overflow: hidden; text-decoration: none; color: #fff; display: flex; align-items: flex-end; transition: flex-grow .45s cubic-bezier(.2,.7,.2,1); }
+.half .media { position: absolute; inset: 0; border-radius: 0; aspect-ratio: auto; }
+.half::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(18,18,19,.82), rgba(18,18,19,.08) 70%); }
+.half .media .ph { justify-content: flex-start; padding-top: 22px; }
+.half .txt { position: relative; z-index: 2; padding: 26px; display: flex; flex-direction: column; gap: 8px; }
+.half h3 { color: #fff; font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.half p { color: #E3E3E6; }
+.half .go { font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.04em; }
+
+/* 4. bots: editor window (VS Code look) */
+#bots { --ink: #D4D4D4; --muted: #9DA3AB; --line: #3A3A3D; --surface: #252526; --soft: #2A2A2D; --stage: #2D2D30; --stripe: #37373B; --accent-ink: #1E1E1E; background: #161616; color: var(--ink); border: 1px solid #2A2A2A; border-radius: 22px; padding: clamp(18px, 4vw, 40px); display: flex; flex-direction: column; gap: 28px; }
+#bots .head { margin-bottom: 0; }
+.win { background: #1E1E1E; border: 1px solid #333337; border-radius: 10px; overflow: hidden; font-family: var(--font-mono); }
+.win-title { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: #252526; border-bottom: 1px solid #1B1B1C; font-size: 0.75rem; color: #9DA3AB; }
+.win-title i { width: 10px; height: 10px; border-radius: 50%; background: #4A4A4E; display: block; }
+.win-title span { margin-left: 8px; }
+.win-body { display: grid; grid-template-columns: 200px minmax(0, 1fr); }
+.side { background: #252526; padding: 14px 0; border-right: 1px solid #1B1B1C; font-size: 0.8125rem; }
+.side .lbl { padding: 0 14px 10px; color: #9DA3AB; letter-spacing: .08em; font-size: .6875rem; text-transform: uppercase; }
+.side .dir { padding: 4px 14px; color: #D4D4D4; }
+.file { display: block; width: 100%; text-align: left; background: none; border: 0; color: #9DA3AB; padding: 5px 14px 5px 32px; font: inherit; cursor: pointer; }
+.file:hover { background: #2A2D2E; }
+.file[aria-current="true"] { background: #37373D; color: #FFFFFF; }
+.main { min-width: 0; display: flex; flex-direction: column; }
+.tabs { display: flex; background: #252526; overflow-x: auto; }
+.tab { padding: 9px 18px; font: inherit; font-size: 0.8125rem; color: #9DA3AB; background: none; border: 0; border-right: 1px solid #1B1B1C; border-top: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: #1E1E1E; color: #FFFFFF; border-top-color: #D4D4D4; }
+.pane { padding: 22px; display: flex; flex-direction: column; gap: 22px; font-family: var(--font-body); min-height: 440px; }
+.pane-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: center; }
+.info { display: flex; flex-direction: column; gap: 12px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.tags li { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--soft); }
+.codebox { border: 1px solid var(--line); border-radius: 8px; background: #1E1E1E; overflow: hidden; }
+.vbody { padding: 12px 0; overflow-x: auto; font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.75; counter-reset: ln; color: #D4D4D4; }
+.vbody .l { display: block; white-space: pre; padding-right: 20px; counter-increment: ln; min-width: max-content; }
+.vbody .l::before { content: counter(ln); display: inline-block; width: 48px; padding-right: 18px; text-align: right; color: #6E7681; }
+.kw { color: #569CD6; } .cf { color: #C586C0; } .fn { color: #DCDCAA; } .st { color: #CE9178; }
+.cm { color: #6A9955; } .ty { color: #4EC9B0; } .va { color: #9CDCFE; }
+.md-h { font-family: var(--font-mono); color: #6A9955; font-size: 0.875rem; }
+.term { border-top: 1px solid #333337; background: #181818; padding: 10px 16px; font-size: 0.8125rem; color: #9DA3AB; display: flex; flex-direction: column; gap: 2px; }
+.term b { color: #D4D4D4; font-weight: 400; }
+.term .caret { display: inline-block; width: 8px; height: 14px; background: #D4D4D4; vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.vstatus { display: flex; gap: 18px; justify-content: flex-end; padding: 5px 14px; background: #2D2D30; color: #9DA3AB; font-size: 0.75rem; }
+.packages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pkg { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pkg .price { font-family: var(--font-display); font-size: 2.25rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.pkg ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9375rem; }
+.pkg.mid { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+.pkg.mid ul { color: #4A4A4F; }
+
+/* 5. pvp: inventory panels and hotbar */
+#pvp { position: relative; overflow: hidden; background: #B4B4B8; border: 1px solid #A0A0A4; border-radius: 22px; padding: clamp(18px, 4vw, 40px); display: flex; flex-direction: column; gap: 28px; --muted: #3F3F44; }
+#pvp > *:not(canvas) { position: relative; z-index: 1; }
+#pvp .head { margin-bottom: 0; }
+#craft { position: absolute; inset: 0; z-index: 0; opacity: .3; pointer-events: none; }
+.gui { background: #D4D4D7; border: 3px solid; border-color: #FFFFFF #6C6C70 #6C6C70 #FFFFFF; outline: 3px solid #2B2B2E; padding: 14px; }
+.gui-title { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .08em; text-transform: uppercase; color: #3F3F44; margin: 0 0 10px; }
+.inv { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.inv .media { border-radius: 0; border: 3px solid; border-color: #5C5C60 #F2F2F4 #F2F2F4 #5C5C60; }
+.skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sk { background: #8B8B8F; border: 3px solid; border-color: #5C5C60 #F2F2F4 #F2F2F4 #5C5C60; padding: 12px; display: flex; flex-direction: column; gap: 4px; min-height: 108px; }
+.sk b { font-family: var(--font-display); font-weight: 600; color: #121213; }
+.sk span { color: #1F1F22; font-size: 0.875rem; line-height: 1.45; }
+.hotbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.hslot { position: relative; text-align: left; font: inherit; color: #121213; background: #8B8B8F; border: 3px solid; border-color: #5C5C60 #F2F2F4 #F2F2F4 #5C5C60; padding: 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+.hslot .n { position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 0.75rem; color: #2B2B2E; }
+.hslot .nm { font-family: var(--font-display); font-weight: 600; }
+.hslot .price { font-family: var(--font-display); font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.hslot[aria-pressed="true"] { background: #F2F2F4; outline: 3px solid #121213; outline-offset: 3px; }
+.detail { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 28px; align-items: center; }
+.detail .big { font-family: var(--font-display); font-size: 2.75rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.detail .nm2 { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .08em; text-transform: uppercase; color: #3F3F44; }
+.detail ul { margin: 0; padding-left: 18px; grid-column: 2; grid-row: 1 / span 2; color: #1F1F22; }
+
+/* 6. process: horizontal track */
+.track4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.step { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.step .n { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); }
+.step p { color: var(--muted); font-size: 0.9375rem; }
+
+/* 7. contact card */
+.contact-card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: clamp(22px, 5vw, 56px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
+.contact-card h2 { font-size: clamp(1.9rem, 4.6vw, 3.2rem); line-height: 1.05; letter-spacing: -0.03em; }
+.crow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.crow:last-child { border-bottom: 0; }
+.crow .k { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: 72px; }
+.crow .v { font-family: var(--font-mono); font-size: 0.9375rem; overflow-wrap: anywhere; flex: 1 1 160px; min-width: 0; }
+.copy { font: inherit; font-size: 0.8125rem; padding: 6px 14px; border: 1px solid var(--ink); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
+footer { color: var(--muted); font-size: 0.875rem; text-align: center; }
+
+@media (max-width: 820px) {
+  .wrap { gap: 64px; }
+  .hero-row, .inv, .contact-card, .pane-top { grid-template-columns: minmax(0, 1fr); }
+  .track4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .split { flex-direction: column; height: auto; }
+  .half { min-height: 260px; flex: none; }
+  .win-body { grid-template-columns: minmax(0, 1fr); }
+  .side { display: none; }
+  .packages { grid-template-columns: minmax(0, 1fr); }
+  .hotbar { grid-template-columns: minmax(0, 1fr); }
+  .detail { grid-template-columns: minmax(0, 1fr); }
+  .detail ul { grid-column: 1; grid-row: auto; }
+  .marquee { margin-block: -12px; }
+}
+@media (max-width: 480px) { .track4, .skills { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="top">
+
+  <div class="bar">
+    <a class="brand" href="#top">MAX.W</a>
+    <nav>
+      <a href="#work" data-grow="1.08">Work</a>
+      <a href="#bots" data-grow="1.08">Bots</a>
+      <a href="#pvp" data-grow="1.08">PvP</a>
+      <a href="#contact" data-grow="1.08">Contact</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>I build Discord bots and teach Minecraft PvP.</h1>
+    <div class="hero-row">
+      <div class="hero-copy">
+        <span class="label">Python · Discord · Minecraft PvP</span>
+        <p class="lede">Python programs, bots that fit your server, and lessons that fit your level. Clean code, fast replies.</p>
+        <div class="actions">
+          <a class="btn primary" href="#work" data-grow="1.06">See my work</a>
+          <a class="btn" href="https://www.fiverr.com/spocvuchdev" data-grow="1.06">Order on Fiverr</a>
+        </div>
+      </div>
+      <div class="stage" id="stage" data-grow="1.03">
+        <div class="slides" id="slides"></div>
+        <div class="meta">
+          <div class="cap"><strong id="cap-title"></strong><span class="label" id="cap-tag"></span></div>
+          <div class="slots" id="slots"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="run">
+      <div class="grp"><span>Python</span><span>/</span><span>Discord bots</span><span>/</span><span>Tickets</span><span>/</span><span>Verification</span><span>/</span><span>Minecraft PvP</span><span>/</span><span>Aim</span><span>/</span><span>Combos</span><span>/</span><span>Strafing</span><span>/</span></div>
+      <div class="grp"><span>Python</span><span>/</span><span>Discord bots</span><span>/</span><span>Tickets</span><span>/</span><span>Verification</span><span>/</span><span>Minecraft PvP</span><span>/</span><span>Aim</span><span>/</span><span>Combos</span><span>/</span><span>Strafing</span><span>/</span></div>
+    </div>
+  </div>
+
+  <section id="work">
+    <div class="head">
+      <span class="label">Work</span>
+      <h2>What do you need?</h2>
+      <p class="muted">Hover one side to open it, click to see examples and prices.</p>
+    </div>
+    <div class="split">
+      <a class="half" href="#bots" data-flex="1.6">
+        <div class="media" data-src="bot.png"><div class="ph"><b>bot.png</b>screenshot of your bot</div></div>
+        <div class="txt">
+          <span class="label" style="color:#D6D6D9">Python</span>
+          <h3>Bots and Python scripts</h3>
+          <p>Discord bots with tickets, verification and moderation, plus regular Python scripts, built for you.</p>
+          <span class="go">Examples and prices →</span>
+        </div>
+      </a>
+      <a class="half" href="#pvp" data-flex="1.6">
+        <div class="media" data-src="pvp.mp4" data-autoplay><div class="ph"><b>pvp.mp4</b>clip of your PvP</div></div>
+        <div class="txt">
+          <span class="label" style="color:#D6D6D9">Minecraft</span>
+          <h3>PvP lessons</h3>
+          <p>One-on-one coaching for beginners and for players who want to win more fights.</p>
+          <span class="go">Topics and prices →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section id="bots">
+    <div class="head">
+      <a class="back" href="#work" data-grow="1.08">← Back to work</a>
+      <span class="label">Discord bots</span>
+      <h2>Open the project</h2>
+      <p class="muted">Click through the files. The last one has the prices.</p>
+    </div>
+
+    <div class="win">
+      <div class="win-title"><i></i><i></i><i></i><span>spocvuchdev-bots</span></div>
+      <div class="win-body">
+        <div class="side">
+          <div class="lbl">Explorer</div>
+          <div class="dir">▾ bots</div>
+          <button class="file" type="button" data-tab="tickets" aria-current="true">tickets.py</button>
+          <button class="file" type="button" data-tab="verify" aria-current="false">verify.py</button>
+          <button class="file" type="button" data-tab="scripts" aria-current="false">scripts.py</button>
+          <button class="file" type="button" data-tab="pricing" aria-current="false">pricing.md</button>
+        </div>
+        <div class="main">
+          <div class="tabs" role="tablist">
+            <button class="tab" type="button" role="tab" data-tab="tickets" aria-selected="true">tickets.py</button>
+            <button class="tab" type="button" role="tab" data-tab="verify" aria-selected="false">verify.py</button>
+            <button class="tab" type="button" role="tab" data-tab="scripts" aria-selected="false">scripts.py</button>
+            <button class="tab" type="button" role="tab" data-tab="pricing" aria-selected="false">pricing.md</button>
+          </div>
+
+          <div class="pane" role="tabpanel" data-pane="tickets">
+            <div class="pane-top">
+              <div class="media" data-src="ticket.png" data-grow="1.03"><div class="ph"><b>ticket.png</b>screenshot of the ticket bot</div></div>
+              <div class="info">
+                <h3>Ticket bot</h3>
+                <p class="muted">Members press a button, get a private channel with the staff, and staff can close the ticket when it is solved.</p>
+                <ul class="tags"><li>Python</li><li>discord.py</li><li>Buttons</li><li>Permissions</li></ul>
+              </div>
+            </div>
+            <div class="codebox"><div class="vbody" role="img" aria-label="Python code of a Discord ticket command">
+              <span class="l"><span class="cm"># Opens a private channel only the member and staff can see</span></span>
+              <span class="l"><span class="fn">@bot.tree.command</span>(<span class="va">name</span>=<span class="st">"ticket"</span>, <span class="va">description</span>=<span class="st">"Open a support ticket"</span>)</span>
+              <span class="l"><span class="kw">async def</span> <span class="fn">ticket</span>(<span class="va">interaction</span>: <span class="ty">discord.Interaction</span>):</span>
+              <span class="l">    <span class="va">overwrites</span> = {</span>
+              <span class="l">        <span class="va">interaction</span>.guild.default_role: <span class="ty">discord</span>.<span class="ty">PermissionOverwrite</span>(<span class="va">view_channel</span>=<span class="kw">False</span>),</span>
+              <span class="l">        <span class="va">interaction</span>.user: <span class="ty">discord</span>.<span class="ty">PermissionOverwrite</span>(<span class="va">view_channel</span>=<span class="kw">True</span>),</span>
+              <span class="l">    }</span>
+              <span class="l">    <span class="va">channel</span> = <span class="cf">await</span> <span class="va">interaction</span>.guild.<span class="fn">create_text_channel</span>(</span>
+              <span class="l">        <span class="kw">f</span><span class="st">"ticket-{interaction.user.name}"</span>, <span class="va">overwrites</span>=<span class="va">overwrites</span></span>
+              <span class="l">    )</span>
+              <span class="l">    <span class="cf">await</span> <span class="va">interaction</span>.response.<span class="fn">send_message</span>(<span class="kw">f</span><span class="st">"Ticket: {channel.mention}"</span>, <span class="va">ephemeral</span>=<span class="kw">True</span>)</span>
+            </div></div>
+          </div>
+
+          <div class="pane" role="tabpanel" data-pane="verify" hidden>
+            <div class="pane-top">
+              <div class="media" data-src="verify.png" data-grow="1.03"><div class="ph"><b>verify.png</b>screenshot of the verification bot</div></div>
+              <div class="info">
+                <h3>Server verification</h3>
+                <p class="muted">New members verify with one click and receive the member role. Unverified accounts only see the rules channel.</p>
+                <ul class="tags"><li>Python</li><li>discord.py</li><li>Auto roles</li></ul>
+              </div>
+            </div>
+            <div class="codebox"><div class="vbody" role="img" aria-label="Python code of a Discord verification button">
+              <span class="l"><span class="kw">class</span> <span class="ty">VerifyView</span>(<span class="ty">discord.ui.View</span>):</span>
+              <span class="l">    <span class="fn">@discord.ui.button</span>(<span class="va">label</span>=<span class="st">"Verify"</span>, <span class="va">custom_id</span>=<span class="st">"verify:button"</span>)</span>
+              <span class="l">    <span class="kw">async def</span> <span class="fn">verify</span>(<span class="kw">self</span>, <span class="va">interaction</span>, <span class="va">button</span>):</span>
+              <span class="l">        <span class="va">role</span> = discord.utils.<span class="fn">get</span>(<span class="va">interaction</span>.guild.roles, <span class="va">name</span>=<span class="st">"Verified"</span>)</span>
+              <span class="l">        <span class="cf">await</span> <span class="va">interaction</span>.user.<span class="fn">add_roles</span>(<span class="va">role</span>)</span>
+              <span class="l">        <span class="cf">await</span> <span class="va">interaction</span>.response.<span class="fn">send_message</span>(<span class="st">"You are verified."</span>, <span class="va">ephemeral</span>=<span class="kw">True</span>)</span>
+            </div></div>
+          </div>
+
+          <div class="pane" role="tabpanel" data-pane="scripts" hidden>
+            <div class="info">
+              <h3>Python scripts</h3>
+              <p class="muted">Not only bots. I also write regular Python scripts and small programs that automate a task, for example downloading data, renaming files or converting formats.</p>
+              <ul class="tags"><li>Python</li><li>Automation</li><li>Scripts</li><li>Small apps</li></ul>
+            </div>
+            <div class="codebox"><div class="vbody" role="img" aria-label="Example Python script that saves a Minecraft player head">
+              <span class="l"><span class="cm"># Example: save a Minecraft player head as an image</span></span>
+              <span class="l"><span class="cf">import</span> requests</span>
+              <span class="l"></span>
+              <span class="l"><span class="kw">def</span> <span class="fn">download_head</span>(<span class="va">nick</span>: <span class="ty">str</span>, <span class="va">size</span>: <span class="ty">int</span> = 128):</span>
+              <span class="l">    <span class="va">url</span> = <span class="kw">f</span><span class="st">"https://minotar.net/avatar/{nick}/{size}"</span></span>
+              <span class="l">    <span class="va">response</span> = requests.<span class="fn">get</span>(<span class="va">url</span>, <span class="va">timeout</span>=10)</span>
+              <span class="l">    <span class="va">response</span>.<span class="fn">raise_for_status</span>()</span>
+              <span class="l">    <span class="cf">with</span> <span class="fn">open</span>(<span class="kw">f</span><span class="st">"{nick}.png"</span>, <span class="st">"wb"</span>) <span class="cf">as</span> <span class="va">file</span>:</span>
+              <span class="l">        <span class="va">file</span>.<span class="fn">write</span>(<span class="va">response</span>.content)</span>
+            </div></div>
+          </div>
+
+          <div class="pane" role="tabpanel" data-pane="pricing" hidden>
+            <div class="md-h"># Pricing: Python scripts and Discord bots</div>
+            <div class="packages">
+              <div class="pkg" data-grow="1.04">
+                <h3>Basic</h3>
+                <div class="price">$15</div>
+                <ul><li>Discord bot or Python script made for you</li><li>Sent to you as ready files</li></ul>
+              </div>
+              <div class="pkg mid" data-grow="1.04">
+                <h3>Standard</h3>
+                <div class="price">$25</div>
+                <ul><li>Everything in Basic</li><li>Instructions on how to set it up and use it</li></ul>
+              </div>
+              <div class="pkg" data-grow="1.04">
+                <h3>Premium</h3>
+                <div class="price">$45</div>
+                <ul><li>Everything in Standard</li><li>Consultation about your project</li></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="term"><span><b>PS C:\bots&gt;</b> python bot.py</span><span>Logged in as spocvuchdev-bot <span class="caret"></span></span></div>
+        </div>
+      </div>
+      <div class="vstatus"><span>Python 3.12</span><span>UTF-8</span></div>
+    </div>
+  </section>
+
+  <section id="pvp">
+    <canvas id="craft" aria-hidden="true"></canvas>
+    <div class="head">
+      <a class="back" href="#work" data-grow="1.08">← Back to work</a>
+      <span class="label">Minecraft PvP</span>
+      <h2>Win more fights</h2>
+    </div>
+
+    <div class="inv">
+      <div class="gui" data-grow="1.02">
+        <p class="gui-title">Replay</p>
+        <div class="media" data-src="pvp.mp4" data-autoplay><div class="ph"><b>pvp.mp4</b>your best PvP clip</div></div>
+      </div>
+      <div class="gui">
+        <p class="gui-title">What we work on</p>
+        <div class="skills">
+          <div class="sk" data-grow="1.05"><b>Aim and tracking</b><span>Staying on target while both of you move.</span></div>
+          <div class="sk" data-grow="1.05"><b>Combos</b><span>Chaining hits and keeping the opponent in range.</span></div>
+          <div class="sk" data-grow="1.05"><b>Movement and strafing</b><span>Controlling spacing and avoiding hits.</span></div>
+          <div class="sk" data-grow="1.05"><b>Blocking and tactics</b><span>Reading the fight and choosing when to trade.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gui">
+      <p class="gui-title">Hotbar: pick a plan</p>
+      <div class="hotbar" id="hotbar">
+        <button class="hslot" type="button" data-grow="1.04" data-name="Basic" data-items="Basic PvP tips to get you started" aria-pressed="false"><span class="n">1</span><span class="nm">Basic</span><span class="price">$15</span></button>
+        <button class="hslot" type="button" data-grow="1.04" data-name="Standard" data-items="Everything in Basic|Consultation about how you play|I show you how it is done" aria-pressed="true"><span class="n">2</span><span class="nm">Standard</span><span class="price">$25</span></button>
+        <button class="hslot" type="button" data-grow="1.04" data-name="Premium" data-items="Everything in Standard|Duels against me|Talk and feedback on Discord" aria-pressed="false"><span class="n">3</span><span class="nm">Premium</span><span class="price">$50</span></button>
+      </div>
+      <div class="detail" style="margin-top:18px" aria-live="polite">
+        <div class="big" id="d-price"></div>
+        <ul id="d-list"></ul>
+        <div class="nm2" id="d-name"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="process">
+    <div class="head"><span class="label">How it works</span><h2>From message to delivery</h2></div>
+    <div class="track4">
+      <div class="step"><span class="n">01</span><h3>You message me</h3><p>Tell me what the bot or program should do, or what you want to improve in PvP.</p></div>
+      <div class="step"><span class="n">02</span><h3>Scope and price</h3><p>I confirm what is included before you order.</p></div>
+      <div class="step"><span class="n">03</span><h3>I build or we train</h3><p>You get a working version and can ask for changes.</p></div>
+      <div class="step"><span class="n">04</span><h3>Delivery</h3><p>Final files with the code, and help getting it running.</p></div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="contact-card">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span class="label">Contact</span>
+        <h2>Not sure if I can do your project?</h2>
+        <p class="muted">Send me a message before ordering and we'll talk it through. I also write custom Python programs and scripts.</p>
+      </div>
+      <div>
+        <div class="crow"><span class="k">Fiverr</span><span class="v">@spocvuchdev</span><a class="copy" href="https://www.fiverr.com/spocvuchdev" data-grow="1.06">Open</a></div>
+        <div class="crow"><span class="k">Discord</span><span class="v">maks4414</span><button class="copy" type="button" data-copy="maks4414" data-grow="1.06">Copy</button></div>
+        <div class="crow"><span class="k">Email</span><span class="v">marcelmichal211@gmail.com</span><button class="copy" type="button" data-copy="marcelmichal211@gmail.com" data-grow="1.06">Copy</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>&copy; MAX.W</footer>
+
+</div>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+
+  /* Put your files next to index.html with these names.
+     Slides in the hero rotate in this order. */
+  var SLIDES = [
+    { src: 'bot.png', title: 'Ticket bot', tag: 'Discord bot' },
+    { src: 'pvp.mp4', title: 'PvP clip',   tag: 'Minecraft PvP' }
+  ];
+
+  /* Loads the real image or video into a .media box. If the file is missing,
+     the striped placeholder stays visible. */
+  function mountMedia(box, src) {
+    src = src || box.getAttribute('data-src');
+    if (!src) return null;
+    var el;
+    if (/\.(mp4|webm)$/i.test(src)) {
+      el = document.createElement('video');
+      el.muted = true; el.loop = true; el.playsInline = true; el.preload = 'metadata';
+      el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
+      function ready() { box.classList.add('ready'); }
+      el.addEventListener('loadeddata', ready);
+      el.addEventListener('canplay', ready);
+      el.addEventListener('playing', ready);
+      el.addEventListener('error', function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        var ph = box.querySelector('.ph');
+        if (ph && !ph.querySelector('.err')) {
+          var note = document.createElement('span');
+          note.className = 'err';
+          note.textContent = 'cannot play this file: check the name and use MP4 (H.264)';
+          ph.appendChild(note);
+        }
+      });
+      el.src = src;
+      if (box.hasAttribute('data-autoplay') && !reduce) { el.autoplay = true; }
+    } else {
+      el = document.createElement('img');
+      el.alt = '';
+      el.addEventListener('load', function () { box.classList.add('ready'); });
+      el.addEventListener('error', function () { if (el.parentNode) el.parentNode.removeChild(el); });
+      el.src = src;
+    }
+    box.appendChild(el);
+    return el;
+  }
+
+  each(document.querySelectorAll('.media[data-src]'), function (box) {
+    var el = mountMedia(box);
+    if (el && el.tagName === 'VIDEO' && box.hasAttribute('data-autoplay') && !reduce) {
+      var p = el.play(); if (p && p.catch) p.catch(function () {});
+    }
+  });
+
+  /* Hero slideshow */
+  var slidesBox = document.getElementById('slides');
+  var slotsBox = document.getElementById('slots');
+  var capTitle = document.getElementById('cap-title');
+  var capTag = document.getElementById('cap-tag');
+  var stage = document.getElementById('stage');
+  var items = [], current = 0, timer = null, paused = false;
+
+  SLIDES.forEach(function (s, k) {
+    var box = document.createElement('div');
+    box.className = 'media slide';
+    var ph = document.createElement('div');
+    ph.className = 'ph';
+    ph.innerHTML = '<b></b>' + (/\.(mp4|webm)$/i.test(s.src) ? 'your PvP clip' : 'screenshot of your bot');
+    ph.firstChild.textContent = s.src;
+    box.appendChild(ph);
+    slidesBox.appendChild(box);
+    var el = mountMedia(box, s.src);
+
+    var slot = document.createElement('button');
+    slot.type = 'button'; slot.className = 'slot'; slot.textContent = String(k + 1);
+    slot.setAttribute('aria-label', 'Show ' + s.title);
+    slot.addEventListener('click', function () { show(k); });
+    slotsBox.appendChild(slot);
+
+    items.push({ box: box, el: el, slot: slot, data: s });
+  });
+
+  function show(n) {
+    current = (n + items.length) % items.length;
+    items.forEach(function (it, k) {
+      var on = k === current;
+      it.box.classList.toggle('active', on);
+      it.slot.setAttribute('aria-current', on ? 'true' : 'false');
+      if (it.el && it.el.tagName === 'VIDEO') {
+        if (on) { try { it.el.currentTime = 0; } catch (e) {} var p = it.el.play(); if (p && p.catch) p.catch(function () {}); }
+        else { it.el.pause(); }
+      }
+    });
+    capTitle.textContent = items[current].data.title;
+    capTag.textContent = items[current].data.tag;
+    schedule();
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    if (reduce || paused || items.length < 2) return;
+    var it = items[current];
+    var isLiveVideo = it.el && it.el.tagName === 'VIDEO' && it.box.classList.contains('ready');
+    timer = setTimeout(function () { show(current + 1); }, isLiveVideo ? 9000 : 4500);
+  }
+
+  stage.addEventListener('pointerenter', function () { paused = true; clearTimeout(timer); });
+  stage.addEventListener('pointerleave', function () { paused = false; schedule(); });
+  if (items.length) show(0);
+
+  /* Grow on hover: every [data-grow] element scales up while the mouse is over it. */
+  each(document.querySelectorAll('[data-grow]'), function (el) {
+    var scale = parseFloat(el.getAttribute('data-grow')) || 1.04;
+    function grow() { if (reduce) return; el.style.transform = 'scale(' + scale + ')'; el.classList.add('grown'); }
+    function shrink() { el.style.transform = ''; el.classList.remove('grown'); }
+    el.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') grow(); });
+    el.addEventListener('pointerleave', shrink);
+    el.addEventListener('focusin', function () { if (document.activeElement && document.activeElement.matches(':focus-visible')) grow(); });
+    el.addEventListener('focusout', shrink);
+  });
+
+  /* The two halves in "Work": the hovered one slides open. */
+  var halves = document.querySelectorAll('.half[data-flex]');
+  each(halves, function (el) {
+    var grow = parseFloat(el.getAttribute('data-flex')) || 1.5;
+    function open() { if (!reduce && window.innerWidth > 820) el.style.flexGrow = String(grow); }
+    function close() { el.style.flexGrow = ''; }
+    el.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') open(); });
+    el.addEventListener('pointerleave', close);
+    el.addEventListener('focus', open);
+    el.addEventListener('blur', close);
+  });
+
+  /* Editor window: files and tabs switch the pane */
+  var tabEls = document.querySelectorAll('[data-tab]');
+  var paneEls = document.querySelectorAll('[data-pane]');
+  function openTab(name) {
+    each(tabEls, function (t) {
+      var on = t.getAttribute('data-tab') === name;
+      if (t.classList.contains('tab')) { t.setAttribute('aria-selected', on ? 'true' : 'false'); }
+      else { t.setAttribute('aria-current', on ? 'true' : 'false'); }
+    });
+    each(paneEls, function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+  }
+  each(tabEls, function (t) { t.addEventListener('click', function () { openTab(t.getAttribute('data-tab')); }); });
+
+  /* Hotbar in the PvP section: the selected slot fills the detail panel */
+  var hot = document.querySelectorAll('#hotbar .hslot');
+  var dPrice = document.getElementById('d-price');
+  var dName = document.getElementById('d-name');
+  var dList = document.getElementById('d-list');
+  function pick(slot) {
+    each(hot, function (h) { h.setAttribute('aria-pressed', h === slot ? 'true' : 'false'); });
+    dPrice.textContent = slot.querySelector('.price').textContent;
+    dName.textContent = slot.getAttribute('data-name') + ' plan';
+    dList.innerHTML = '';
+    slot.getAttribute('data-items').split('|').forEach(function (t) {
+      var li = document.createElement('li'); li.textContent = t; dList.appendChild(li);
+    });
+  }
+  each(hot, function (h) { h.addEventListener('click', function () { pick(h); }); });
+  var start = document.querySelector('#hotbar .hslot[aria-pressed="true"]') || hot[0];
+  if (start) pick(start);
+
+  /* Copy buttons in the contact card */
+  each(document.querySelectorAll('[data-copy]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var val = btn.getAttribute('data-copy'), orig = btn.textContent;
+      function done(t) { btn.textContent = t; setTimeout(function () { btn.textContent = orig; }, 1600); }
+      function fallback() {
+        var v = btn.parentNode.querySelector('.v');
+        if (v) { var r = document.createRange(); r.selectNodeContents(v); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+        done('Press Ctrl+C');
+      }
+      try { navigator.clipboard.writeText(val).then(function () { done('Copied'); }, fallback); } catch (e) { fallback(); }
+    });
+  });
+
+  /* Page background changes with the section in the middle of the screen */
+  var MODE = { bots: 'bots', pvp: 'pvp' };
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      var mode = MODE[e.target.id];
+      if (e.isIntersecting) { document.body.setAttribute('data-mode', mode); }
+      else if (document.body.getAttribute('data-mode') === mode) { document.body.removeAttribute('data-mode'); }
+    });
+  }, { rootMargin: '-50% 0px -50% 0px' });
+  ['bots', 'pvp'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+
+  /* Crafting grids drawn in the PvP section background */
+  var craft = document.getElementById('craft');
+  var pvpPanel = document.getElementById('pvp');
+  var ART = {
+    ingot: { map: ['........','..aaaa..','.abbbbc.','.abbbbc.','.abbbbc.','..cccc..','........','........'], pal: { a: '#F0F0F2', b: '#6E6E73', c: '#4C4C50' } },
+    stick: { map: ['......a.','.....a..','....a...','...a....','..a.....','.a......','a.......','........'], pal: { a: '#4C4C50' } },
+    sword: { map: ['.......a','......ab','.....ab.','....ab..','.c.ab...','..cb....','.d.c....','d.......'], pal: { a: '#F0F0F2', b: '#9A9A9F', c: '#4C4C50', d: '#5A5A5E' } },
+    pick:  { map: ['...aaa..','..a.d.a.','.a.d...a','..d.....','.d......','d.......','........','........'], pal: { a: '#6A6A6F', d: '#5A5A5E' } }
+  };
+  var RECIPES = {
+    sword: [[0,'ingot',0],[0,'ingot',0],[0,'stick',0]],
+    pick:  [['ingot','ingot','ingot'],[0,'stick',0],[0,'stick',0]]
+  };
+  function drawIcon(c, name, x, y, s) {
+    var a = ART[name];
+    for (var r = 0; r < 8; r++) {
+      for (var q = 0; q < 8; q++) {
+        var ch = a.map[r].charAt(q);
+        if (a.pal[ch]) { c.fillStyle = a.pal[ch]; c.fillRect(x + q * s, y + r * s, s, s); }
+      }
+    }
+  }
+  function drawSlot(c, x, y, s) {
+    c.fillStyle = '#B0B0B4'; c.fillRect(x, y, s, s);
+    c.fillStyle = '#7E7E82'; c.fillRect(x, y, s, 3); c.fillRect(x, y, 3, s);
+    c.fillStyle = '#EDEDEF'; c.fillRect(x, y + s - 3, s, 3); c.fillRect(x + s - 3, y, 3, s);
+  }
+  function drawArrow(c, x, y) {
+    c.fillStyle = '#8E8E92';
+    c.fillRect(x, y + 9, 16, 6); c.fillRect(x + 16, y + 3, 4, 18);
+    c.fillRect(x + 20, y + 6, 4, 12); c.fillRect(x + 24, y + 9, 4, 6);
+  }
+  function drawBlock(c, x, y, kind) {
+    var S = 36, G = 4, grid = RECIPES[kind];
+    for (var r = 0; r < 3; r++) {
+      for (var q = 0; q < 3; q++) {
+        var sx = x + q * (S + G), sy = y + r * (S + G);
+        drawSlot(c, sx, sy, S);
+        if (grid[r][q]) { drawIcon(c, grid[r][q], sx + 6, sy + 6, 3); }
+      }
+    }
+    drawArrow(c, x + 130, y + 46);
+    drawSlot(c, x + 172, y + 36, 44);
+    drawIcon(c, kind, x + 178, y + 42, 4);
+  }
+  function drawCraft() {
+    if (!craft || !pvpPanel) return;
+    var w = pvpPanel.clientWidth, h = pvpPanel.clientHeight;
+    if (!w || !h) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    craft.width = Math.round(w * dpr); craft.height = Math.round(h * dpr);
+    craft.style.width = w + 'px'; craft.style.height = h + 'px';
+    var c = craft.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    var stepX = 286, stepY = 172, n = 0;
+    for (var row = 0, y = -30; y < h; y += stepY, row++) {
+      var off = (row % 2) * (stepX / 2);
+      for (var x = 20 - off; x < w; x += stepX, n++) { drawBlock(c, x, y, (n % 2) ? 'sword' : 'pick'); }
+    }
+  }
+  drawCraft();
+  if (window.ResizeObserver) { new ResizeObserver(drawCraft).observe(pvpPanel); }
+  else { window.addEventListener('resize', drawCraft); }
+})();
+</script>
+
+</body>
+</html>
